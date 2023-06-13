@@ -1,0 +1,9 @@
+# Ignore special Python files:
+
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore other logs:
+
+*.txt
