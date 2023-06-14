@@ -80,14 +80,19 @@ class TippyServer:
 
         return time.strftime("%a, %d %b %Y %H:%M:") + f'{secs_str} GMT'
 
-    def check_cache_date(self, request: req.SimpleRequest):
+    def should_send_update(self, request: req.SimpleRequest):
         """
             @description Checks if a requested resource is up to date.
         """
-        resource_mod_time = self.resource_storage.get_item(request.path).get_modify_time()
-        request_cache_time = request.get_check_modify_date()
+        resource_ref = self.resource_storage.get_item(request.path[1:])
+        resource_mod_date = 0  # NOTE if resource cannot be deduced from relative URL path: assume 0 as default for now. This vacuously covers invalid resources with 304 to not serve them.
 
-        return resource_mod_time > request_cache_time
+        if resource_ref is not None:
+            resource_mod_date = resource_ref.get_modify_date()
+
+        request_cache_date = request.get_check_modify_date()
+
+        return resource_mod_date > request_cache_date
 
     def reply_error(self, request: req.SimpleRequest, optional_stat: str):
         """
@@ -98,15 +103,19 @@ class TippyServer:
         # NOTE: Check for remote endpoint close (send 0) since we need to gracefully handle non-persistent clients.
         if not write_ok:
             return SERVER_ST_STOP
-
-        self.to_client.send_header("Date", self.get_time_str())
-        self.to_client.send_header("Connection", "Keep-Alive")
-        self.to_client.send_header("Server", self.appname)
-        self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
         
         # NOTE: respect connection closing headers for graceful ending of HTTP exchange.
         if request.before_close():
+            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Connection", "Close")
+            self.to_client.send_header("Server", self.appname)
+            self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
             return SERVER_ST_STOP
+        else:
+            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Connection", "Keep-Alive")
+            self.to_client.send_header("Server", self.appname)
+            self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
 
         return SERVER_ST_REQUEST
 
@@ -116,10 +125,17 @@ class TippyServer:
         if not write_ok:
             return SERVER_ST_STOP
 
-        self.to_client.send_header("Date", self.get_time_str())
-        self.to_client.send_header("Connection", "Keep-Alive")
-        self.to_client.send_header("Server", self.appname)
-        self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
+        if request.before_close():
+            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Connection", "Close")
+            self.to_client.send_header("Server", self.appname)
+            self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
+            return SERVER_ST_STOP
+        else:
+            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Connection", "Keep-Alive")
+            self.to_client.send_header("Server", self.appname)
+            self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
 
         return SERVER_ST_REQUEST
 
@@ -132,7 +148,7 @@ class TippyServer:
         if not request_method_ok:
             return self.reply_error(request, "501")
 
-        if self.check_cache_date(request):
+        if not self.should_send_update(request):
             return self.reply_cache_hit(request)
 
         request_last = request.before_close()
@@ -145,7 +161,7 @@ class TippyServer:
         if not temp_handler_ref(self.resource_storage, self.get_time_str, request, self.to_client):
             return SERVER_ST_STOP
 
-        # NOTE: Respect connection closing header for graceful handle of 1-time client msg.
+        # NOTE: Respect connection closing header for graceful handle of final client msg... Maybe I should later send Connection: Close?
         if request_last:
             return SERVER_ST_STOP
 
@@ -182,8 +198,10 @@ class TippyServer:
                     else:
                         self.serve_state = SERVER_ST_ERR_REQ
                 elif self.serve_state == SERVER_ST_REPLY:
+                    # Try replying normally!
                     self.serve_state = self.reply_normal(request)
                 elif self.serve_state == SERVER_ST_ERR_REQ:
+                    # Try to reply an error message!
                     self.serve_state = self.reply_error(request, "400")
                 elif self.serve_state == SERVER_ST_ERR_GEN:
                     self.serve_state = self.reply_error(request, "500")
@@ -192,8 +210,8 @@ class TippyServer:
                     self.serve_state = SERVER_ST_STOP
             except Exception as server_err:
                 self.strikes += 1
-                print(f'Server Err: {server_err}')
+                print(f'Server Err: {server_err.with_traceback(None)}')
                 self.serve_state = SERVER_ST_ERR_GEN
         
-        # NOTE: End persistent connection and cleanup to free resources. 
+        # NOTE: End connection and cleanup. 
         self.socket.close()
