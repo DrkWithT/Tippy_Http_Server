@@ -43,7 +43,14 @@ class SimpleRequest:
         """
             @note The GMT string returned here must be converted to a python time object before comparing!
         """
-        request_mod_time = time.strptime(self.get_header("if-modified-since"), "%a, %d %b %Y %H:%M:%S GMT")
+
+        temp_header = self.get_header("if-modified-since")
+
+        # NOTE default invalid or non-present cache date headers to 0 epoch seconds for now!
+        if not temp_header:
+            return 0
+
+        request_mod_time = time.strptime(temp_header, "%a, %d %b %Y %H:%M:%S GMT")
 
         return calendar.timegm(request_mod_time)
 
@@ -51,7 +58,13 @@ class SimpleRequest:
         """
             @note The GMT string returned here must be converted to a python time object before comparing!
         """
-        request_unmod_time = time.strptime(self.get_header("if-unmodified-since"), "%a, %d %b %Y %H:%M:%S GMT")
+        temp_header = self.get_header("if-unmodified-since")
+
+        # NOTE default invalid or non-present cache date headers to 0 epoch seconds for now!
+        if not temp_header:
+            return 0
+
+        request_unmod_time = time.strptime(temp_header, "%a, %d %b %Y %H:%M:%S GMT")
 
         return calendar.timegm(request_unmod_time)
 

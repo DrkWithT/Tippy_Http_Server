@@ -87,6 +87,7 @@ class HttpScanner:
         if self.hdr_cache["transfer-encoding"] == "chunked":
             return SCANNER_ST_CHUNK_LEN
 
+        print("reading body!")
         self.temp_data = self.reader.read(content_len)
 
         return SCANNER_ST_END
@@ -140,7 +141,7 @@ class HttpScanner:
                     cont_len = int(clen_str)
                 else:
                     self.hdr_cache["content-length"] = 0
-                    cont_len = self.hdr_cache["content-length"]
+                    cont_len = 0
 
                 self.state = self.state_body(cont_len)
             elif self.state == SCANNER_ST_CHUNK_LEN:
