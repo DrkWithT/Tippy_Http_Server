@@ -3,6 +3,10 @@
     @author Derek Tan
 """
 
+import calendar
+import time
+import os
+
 FS_SEEK_START = 0
 FS_SEEK_END = 2
 MIME_TYPE_TEXT = "text/plain"
@@ -22,6 +26,7 @@ class StaticResource:
         self.type = MIME_TYPE_ANY
         self.data = None
         self.length = 0
+        self.modify_date = None
 
         dot_pos = file_path.find(".", 1)
         file_ext = "foo"
@@ -39,6 +44,7 @@ class StaticResource:
 
         self.data = file_stream.read(file_length)
         self.length = file_length
+        self.modify_date = calendar.timegm(time.gmtime(os.stat(path=file_path).st_mtime))
 
         file_stream.close()
 
@@ -47,6 +53,9 @@ class StaticResource:
     
     def get_content_len(self):
         return self.length
+
+    def get_modify_date(self):
+        return self.modify_date
 
     def as_bytes(self):
         return self.data
