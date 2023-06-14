@@ -7,25 +7,15 @@ import socket
 import http1.consts as consts
 import http1.request as requests
 
-# Notes:
-"""
-    HttpScanner.state:
-    0,  # IDLE
-    1,  # HEADING
-    2,  # HEADER
-    3,  # BLANK
-    4,  # BODY
-    5,  # END
-    6   # ERROR
-"""
-
 # State Aliases:
 SCANNER_ST_IDLE = 0
 SCANNER_ST_HEADING = 1
 SCANNER_ST_HEADER = 2
 SCANNER_ST_BODY = 3
-SCANNER_ST_END = 4
-SCANNER_ST_ERROR = 5
+SCANNER_ST_CHUNK_LEN = 4
+SCANNER_ST_CHUNK_BLOB = 5
+SCANNER_ST_END = 6
+SCANNER_ST_ERROR = 7
 
 class HttpScanner:
     def __init__(self, in_stream: socket.SocketIO):
@@ -34,7 +24,7 @@ class HttpScanner:
 
         # File stream from socket:
         self.reader = in_stream
-        
+
         # List of status line tokens:
         self.temps = None
 
@@ -44,6 +34,9 @@ class HttpScanner:
             "connection": None,
             "content-type": None,
             "content-length": None,
+            "transfer-encoding": None,
+            "if-modified-since": None,
+            "if-unmodified-since": None
         }
 
         # Cache for bytes to put in request object:
@@ -56,6 +49,7 @@ class HttpScanner:
         self.hdr_cache["connection"] = None
         self.hdr_cache["content-type"] = None
         self.hdr_cache["content-length"] = None
+        self.hdr_cache["transfer-encoding"] = None
         self.temp_data = None
 
     def state_heading(self, line: str):
@@ -80,18 +74,42 @@ class HttpScanner:
             first_colon_pos = line.index(consts.HTTP_HDR_SP) 
         except:
             return SCANNER_ST_ERROR
-        
+
         header_name = line[0 : first_colon_pos].strip().lower()
         header_value = line[first_colon_pos + 1 :].strip()
 
         if self.hdr_cache.get(header_name) is None:
             self.hdr_cache[header_name] = header_value
-        
+
         return SCANNER_ST_HEADER
 
     def state_body(self, content_len = 0):
+        if self.hdr_cache["transfer-encoding"] == "chunked":
+            return SCANNER_ST_CHUNK_LEN
+
         self.temp_data = self.reader.read(content_len)
-        
+
+        return SCANNER_ST_END
+
+    def state_chunk_len(self, line: str):
+        if line is None:
+            return SCANNER_ST_END
+
+        if len(line) > 0:  # NOTE chunk length lines are usually ignored, so just check for their presence.
+            return SCANNER_ST_CHUNK_BLOB
+
+        return SCANNER_ST_END
+
+    def state_chunk_blob(self, chunk_line: str):
+        if len(chunk_line) > 0:
+            temp_chunk_data = chunk_line.encode(encoding="ascii")
+            temp_chunk_size = len(temp_chunk_data)
+
+            self.temp_data.join(temp_chunk_data)
+            self.hdr_cache["content-length"] += temp_chunk_size
+
+            return SCANNER_ST_CHUNK_LEN
+
         return SCANNER_ST_END
 
     def next_request(self):
@@ -120,13 +138,22 @@ class HttpScanner:
                 # NOTE: parse content-length only if available!
                 if clen_str is not None:
                     cont_len = int(clen_str)
-                
+                else:
+                    self.hdr_cache["content-length"] = 0
+                    cont_len = self.hdr_cache["content-length"]
+
                 self.state = self.state_body(cont_len)
+            elif self.state == SCANNER_ST_CHUNK_LEN:
+                temp_line = self.reader.readline().strip()
+                self.state = self.state_chunk_len(temp_line)
+            elif self.state == SCANNER_ST_CHUNK_BLOB:
+                temp_line = self.reader.readline().strip()
+                self.state = self.state_chunk_blob(temp_line)
             elif self.state == SCANNER_ST_END:
                 pass
             else:
                 raise Exception("Invalid HTTP msg syntax!")
-        
+
         # TODO: Check req_schema for "HTTP/1.1"?
         req_method, req_path, req_schema = self.temps
 

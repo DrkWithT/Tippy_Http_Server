@@ -16,6 +16,7 @@ HTTP_SCHEMA = "HTTP/1.1"
 
 HTTP_STATS = {
     "200": "OK",
+    "304": "Not Modified",
     "400": "Bad Request",
     "404": "Not Found",
     "500": "Server Error",
