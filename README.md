@@ -26,4 +26,5 @@ Lately I've been on an HTTP (1.1) server writing frenzy, and I decided to try Py
 
 ### Things To Add??
  1. Support 100 Continue.
- 2. Support chunked transfer encoding.
+ 2. ~~Support chunked transfer encoding.~~
+ 3. Respect requests with `If-Modified-Since` or `If-Unmodified-Since`. Update resource classes to store load date for crude "update" date to reference.
