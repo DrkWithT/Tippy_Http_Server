@@ -4,6 +4,7 @@
     @todo Refactor code??
 """
 
+import time
 import socket
 
 import http1.request as req
@@ -67,10 +68,12 @@ class TippyServer:
             @description Checks if a requested resource is up to date.
         """
         resource_ref = self.resource_storage.get_item(request.path[1:])
-        resource_mod_date = 0  # NOTE if resource cannot be deduced from relative URL path: assume 0 as default for now. This vacuously covers invalid resources with 304 to not serve them.
 
-        if resource_ref is not None:
-            resource_mod_date = resource_ref.get_modify_date()
+        # NOTE: Do not 304 for unknown resources, as this may confuse the user about the message semantics.
+        if resource_ref is None:
+            return False
+
+        resource_mod_date = resource_ref.get_modify_date()
 
         request_cache_date = request.get_check_modify_date()
 
@@ -130,7 +133,7 @@ class TippyServer:
         if not request_method_ok:
             return self.reply_error(request, "501")
 
-        if not self.should_send_update(request):
+        if self.should_send_update(request):
             return self.reply_cache_hit(request)
 
         request_last = request.before_close()

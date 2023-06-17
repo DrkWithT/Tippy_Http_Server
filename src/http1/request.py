@@ -46,9 +46,9 @@ class SimpleRequest:
 
         temp_header = self.get_header("if-modified-since")
 
-        # NOTE default invalid or non-present cache date headers to 0 epoch seconds for now!
+        # NOTE default invalid or non-present cache date headers to now!
         if not temp_header:
-            return 0
+            return time.time().__floor__()
 
         request_mod_time = time.strptime(temp_header, "%a, %d %b %Y %H:%M:%S GMT")
 
