@@ -1,11 +1,9 @@
 """
     @file driver.py
     @author Derek Tan
-    @todo Add support for code "304" responses based on checks for cache headers: "If-Modified-Since" or "If-Unmodified-Since". I should create a special method such as cache_hit_reply to check the request cache header against request path's resource by name.
+    @todo Refactor code??
 """
 
-import calendar
-import time
 import socket
 
 import http1.request as req
@@ -13,10 +11,10 @@ import http1.scanner as reqstream
 import http1.sender as res
 
 import utils.rescache as rescache
-
 import handlers.handcache as hdlrstore
+import handlers.ctx.context as context
 
-SERVER_APP_NAME = "Tippy/v0.2"
+SERVER_APP_NAME = "Tippy/v0.3"
 
 SERVER_ST_IDLE = 0
 SERVER_ST_REQUEST = 1
@@ -49,7 +47,8 @@ class TippyServer:
 
         self.resource_storage = rescache.ResourceCache(public_folder)
         self.handler_storage = hdlrstore.HandlerCache()
-    
+        self.context = context.HandlerCtx(self.resource_storage)
+
     def force_stop(self):
         """
             @description Stops the server from continuing its next service.
@@ -59,26 +58,6 @@ class TippyServer:
     
     def register_handler(self, paths: list[str], handler = None):
         return self.handler_storage.add_handler(paths, handler)
-    
-    def get_time_str(self):
-        """
-            @description Makes a GMT time string for all responses. This is a helper method!
-        """
-        # Get raw time!
-        now = time.gmtime()
-        secs = now.tm_sec
-        secs_str = None
-
-        # NOTE: python time structs use leap seconds up to 61s, so I must normalize them in 0 to 59s ranges!
-        if secs > 59:
-            secs = secs % 60
-
-        if secs < 10:
-            secs_str = f'0{secs}'
-        else:
-            secs_str = f'{secs}'
-
-        return time.strftime("%a, %d %b %Y %H:%M:") + f'{secs_str} GMT'
 
     def should_send_update(self, request: req.SimpleRequest):
         """
@@ -106,13 +85,13 @@ class TippyServer:
         
         # NOTE: respect connection closing headers for graceful ending of HTTP exchange.
         if request.before_close():
-            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Date", self.context.get_gmt_str())
             self.to_client.send_header("Connection", "Close")
             self.to_client.send_header("Server", self.appname)
             self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
             return SERVER_ST_STOP
         else:
-            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Date", self.context.get_gmt_str())
             self.to_client.send_header("Connection", "Keep-Alive")
             self.to_client.send_header("Server", self.appname)
             self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
@@ -126,13 +105,13 @@ class TippyServer:
             return SERVER_ST_STOP
 
         if request.before_close():
-            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Date", self.context.get_gmt_str())
             self.to_client.send_header("Connection", "Close")
             self.to_client.send_header("Server", self.appname)
             self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
             return SERVER_ST_STOP
         else:
-            self.to_client.send_header("Date", self.get_time_str())
+            self.to_client.send_header("Date", self.context.get_gmt_str())
             self.to_client.send_header("Connection", "Keep-Alive")
             self.to_client.send_header("Server", self.appname)
             self.to_client.send_body(res.RES_ERR_BODY, "*/*", None)
@@ -158,7 +137,7 @@ class TippyServer:
         if temp_handler_ref is None:
             return self.reply_error(request, "404")
 
-        if not temp_handler_ref(self.resource_storage, self.get_time_str, request, self.to_client):
+        if not temp_handler_ref(self.context, request, self.to_client):
             return SERVER_ST_STOP
 
         # NOTE: Respect connection closing header for graceful handle of final client msg... Maybe I should later send Connection: Close?
