@@ -42,11 +42,11 @@ class SimpleSender:
         elif body_code == RES_HEAD_BODY:  # NOTE: if omit_flag is present, write headers for peeked resource only for HEAD reqs.
             self.send_header("Content-Type", mime_str)
             self.send_header("Content-Length", f'{len(body_data)}')
-            write_ok = self.writer.write(consts.HTTP_ENDL.encode(encoding="ascii"))
+            write_ok = self.writer.write(consts.HTTP_ENDL.encode(encoding="ascii")) > 0
         else:  # NOTE: otherwise, write an empty body for a non-HEAD reply such as an HTTP or server error message.
             self.send_header("Content-Type", "*/*")
             self.send_header("Content-Length", "0")
-            write_ok = self.writer.write(consts.HTTP_ENDL.encode(encoding="ascii"))
+            write_ok = self.writer.write(consts.HTTP_ENDL.encode(encoding="ascii")) > 0
 
         self.writer.flush()
 
