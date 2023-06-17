@@ -7,6 +7,7 @@ class HandlerCache:
     def __init__(self):
         self.path_table = {}
         self.handlers = []
+        self.fallback = None
     
     def add_handler(self, paths: list[str], handler=None):
         if not handler or not paths:
@@ -24,9 +25,12 @@ class HandlerCache:
         return True
     
     def get_handler(self, path: str):
-        handler_index = self.path_table[path]
+        handler_index = self.path_table.get(path)
 
         if handler_index is None:
-            return None
-        
+            return self.fallback
+
         return self.handlers[handler_index]
+    
+    def set_fallback_handler(self, fallback = None):
+        self.fallback = fallback

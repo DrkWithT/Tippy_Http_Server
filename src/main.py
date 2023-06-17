@@ -13,6 +13,17 @@ my_server = None
 
 # HANDLERS
 
+def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    response.send_heading("404")
+    response.send_header("Date", context.get_gmt_str())
+    response.send_header("Connection", "Keep-Alive")
+    response.send_header("Server", driver.SERVER_APP_NAME)
+
+    if request.method == "HEAD":
+        return response.send_body(res.RES_HEAD_BODY, "*/*", b'')
+    else:
+        return response.send_body(res.RES_ERR_BODY, "*/*", b'')
+
 def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
     temp_resource = context.get_resource("index.html")
 
@@ -49,6 +60,7 @@ atexit.register(interrupt_handler)
 
 my_server = driver.TippyServer()
 
+my_server.register_fallback_handler(handle_fallback)
 my_server.register_handler(["/index.html"], handle_index)
 my_server.register_handler(["/info.html"], handle_info)
 

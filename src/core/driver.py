@@ -58,6 +58,9 @@ class TippyServer:
     
     def register_handler(self, paths: list[str], handler = None):
         return self.handler_storage.add_handler(paths, handler)
+    
+    def register_fallback_handler(self, handler = None):
+        self.handler_storage.set_fallback_handler(handler)
 
     def should_send_update(self, request: req.SimpleRequest):
         """
@@ -134,9 +137,6 @@ class TippyServer:
 
         temp_handler_ref = self.handler_storage.get_handler(request.path)
 
-        if temp_handler_ref is None:
-            return self.reply_error(request, "404")
-
         if not temp_handler_ref(self.context, request, self.to_client):
             return SERVER_ST_STOP
 
@@ -189,7 +189,7 @@ class TippyServer:
                     self.serve_state = SERVER_ST_STOP
             except Exception as server_err:
                 self.strikes += 1
-                print(f'Server Err: {server_err.with_traceback(None)}')
+                print(f'Server Err: {server_err.with_traceback(server_err)}')
                 self.serve_state = SERVER_ST_ERR_GEN
         
         # NOTE: End connection and cleanup. 
