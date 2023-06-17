@@ -11,7 +11,6 @@ Lately I've been on an HTTP (1.1) server writing frenzy, and I decided to try Py
  - Persistent or closing connection handling.
  - HEAD and GET methods.
  - Will have chunked message handling soon?
- - Will have cache header checks and 304 responses soon?
 
 ### Current Bugs:
  1. On connection problems, the server may give malformed responses such as a "run-on" response message with multiple status lines and header groups. As of now, I am at a loss on how to fix this.
@@ -26,7 +25,7 @@ Lately I've been on an HTTP (1.1) server writing frenzy, and I decided to try Py
  - `curl --verbose -X GET http://localhost:8080/info.html` (GET page)
  - `curl --verbose -X GET http://localhost:8080/index.html -H "Connection: Close" -H "If-Modified-Since: Mon, 12 Jun 2023 23:59:59 GMT"` (GET page with update date check... modify `public/index.html` to test this.)
 
-### Things To Add??
- 1. Support 100 Continue. (To do...)
- 2. Support chunked transfer encoding. (To be tested...)
- 3. Respect requests with `If-Modified-Since` or `If-Unmodified-Since`. Update resource classes to store load date for crude "update" date to reference. (Partially tested...)
+### Things To Do??
+ 1. Support chunked transfer encoding. (To be tested...)
+ 2, Refactor server code to be cleaner: modular, well-named, etc.
+ 3. Support 100 Continue. (To do...)
