@@ -22,6 +22,9 @@ FILE_EXTS_TO_MIME = {
 }
 
 class StaticResource:
+    """
+        @description Encapsulates data for a static file resource.
+    """
     def __init__(self, file_path: str):
         self.type = MIME_TYPE_ANY
         self.data = None

@@ -7,6 +7,9 @@ import os
 import utils.resources as resources
 
 class ResourceCache:
+    """
+        @description Stores a mapping of names to pre-loaded files to serve.
+    """
     def __init__(self, public_dirname: str):
         self.indexes = {}  # NOTE: maps file names to resource objects.
 
@@ -22,4 +25,4 @@ class ResourceCache:
         self.indexes[file_name] = res_obj
 
     def get_item(self, file_name: str):
-        return self.indexes[file_name]
+        return self.indexes.get(file_name)
