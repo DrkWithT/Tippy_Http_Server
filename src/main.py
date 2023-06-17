@@ -6,18 +6,18 @@
 import atexit
 import http1.request as req
 import http1.sender as res
-import utils.rescache as rescache
+import handlers.ctx.context as handlerctx
 import core.driver as driver
 
 my_server = None
 
 # HANDLERS
 
-def handle_index(context: rescache.ResourceCache, time_generator: any, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_item("index.html")
+def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    temp_resource = context.get_resource("index.html")
 
     response.send_heading("200")
-    response.send_header("Date", time_generator())
+    response.send_header("Date", context.get_gmt_str())
     response.send_header("Connection", "Keep-Alive")
     response.send_header("Server", driver.SERVER_APP_NAME)
 
@@ -26,11 +26,11 @@ def handle_index(context: rescache.ResourceCache, time_generator: any, request: 
     else:
         return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
-def handle_info(context: rescache.ResourceCache, time_generator: any, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_item("info.html")
+def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    temp_resource = context.get_resource("info.html")
 
     response.send_heading("200")
-    response.send_header("Date", time_generator())
+    response.send_header("Date", context.get_gmt_str())
     response.send_header("Connection", "Keep-Alive")
     response.send_header("Server", driver.SERVER_APP_NAME)
 
