@@ -1,10 +1,8 @@
 """
     @file driver.py
     @author Derek Tan
-    @todo Refactor code??
 """
 
-import time
 import socket
 
 import http1.request as req
@@ -28,7 +26,7 @@ SERVER_MAX_STRIKE_LIMIT = 2
 
 class TippyServer:
     """
-        @description The main server class. Contains main service logic following a finite state machine to handle requests, send responses, and possibly repeat or end.
+        @description The main server class. Contains main service logic as a finite state machine to process requests, send responses, and continue.
     """
 
     def __init__(self, hostname="localhost", port=8080, backlog=5, public_folder="./public"):
@@ -163,8 +161,6 @@ class TippyServer:
 
         # 3. serve content with FSM!
         while self.serve_state != SERVER_ST_STOP and self.strikes <= SERVER_MAX_STRIKE_LIMIT:
-            print(f'serve_state = {self.serve_state}')  # DEBUG!
-
             try:
                 if self.serve_state == SERVER_ST_IDLE:
                     # Start State!
