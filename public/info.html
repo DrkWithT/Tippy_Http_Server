@@ -3,22 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Info Page</title>
 </head>
 <body>
-    <h1>Info Page</h1>
-    <p>After writing another static web server in Java, I decided to try Python 3.x for implementing a very minimal HTTP server. This new HTTP server is called "Tippy". Currently this is a toy project made for fun.</p>
-    <hr>
-    <h2>Features</h2>
-    <ul>
-        <li>Persistent connections</li>
-        <li>Message checks</li>
-        <li>HEAD and GET support</li>
-        <li>Date telling</li>
-        <li>Cache control</li>
-    </ul>
-    <hr>
-    <h2>Links</h2>
-    <a href="index.html">Index Page</a>
+    <header>
+        <div>
+            <h2>Info Page</h2>
+        </div>
+        <nav>
+            <a class="nav-link" href="index.html">Index Page</a>
+        </nav>
+    </header>
+    <div id="cols">
+        <section>
+            <h2>Brief</h2><br>
+            <p>After writing another static web server in Java, I decided to try Python 3.x for implementing a very minimal HTTP server. This new HTTP server is called "Tippy". Currently this is a toy project made for fun.</p>
+        </section>
+        <section>
+            <h2>Features</h2><br>
+            <ul>
+                <li>Persistent connections</li>
+                <li>Message checks</li>
+                <li>HEAD and GET support</li>
+                <li>Date telling</li>
+                <li>Cache control</li>
+            </ul>
+        </section>
+    </div>
 </body>
 </html>
