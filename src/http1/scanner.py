@@ -53,7 +53,6 @@ class HttpScanner:
         self.temp_data = None
 
     def state_heading(self, line: str):
-        print(f'heading line blank? {len(line) < 1}')  # DEBUG!
         tokens = line.split(consts.HTTP_SP)
 
         if len(tokens) != 3:
@@ -64,7 +63,6 @@ class HttpScanner:
         return SCANNER_ST_HEADER
 
     def state_header(self, line: str):
-        print(f'header line? {line}')  # DEBUG!
         if not line:
             return SCANNER_ST_BODY
 
@@ -87,7 +85,6 @@ class HttpScanner:
         if self.hdr_cache["transfer-encoding"] == "chunked":
             return SCANNER_ST_CHUNK_LEN
 
-        print("reading body!")
         self.temp_data = self.reader.read(content_len)
 
         return SCANNER_ST_END
