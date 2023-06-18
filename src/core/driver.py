@@ -38,7 +38,7 @@ class TippyServer:
         self.backlog = backlog
         self.serve_state = 0
         self.strikes = 0
-        
+
         self.socket = socket.create_server(address=(hostname, port), backlog=self.backlog)
         self.conn_socket = None
         self.from_client = None
@@ -151,6 +151,8 @@ class TippyServer:
         """
             @description Listens for a client connection before serving it.
         """
+        print(f'Running on {self.fullhost}')
+
         # 1. connect client!
         self.conn_socket, client_addr = self.socket.accept()
 

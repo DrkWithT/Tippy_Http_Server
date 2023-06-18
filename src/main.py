@@ -4,12 +4,44 @@
 """
 
 import atexit
+import json
 import http1.request as req
 import http1.sender as res
 import handlers.ctx.context as handlerctx
 import core.driver as driver
 
 my_server = None
+
+# MISC. HELPERS
+
+def get_config_json(file_path: str):
+    result = {
+        "serveaddr": "localhost",
+        "port": 8080
+    }
+
+    fs = None
+    file_size = 0
+    raw_json = None
+
+    try:
+        fs = open(file_path, "r")
+
+        fs.seek(0, 2)
+        file_size = fs.tell()
+        fs.seek(0, 0)
+
+        raw_json = fs.read(file_size)
+        result = json.loads(raw_json)
+    except OSError as err:
+        print(err.with_traceback(err))
+    except Exception as ex:
+        print(ex.with_traceback(ex))
+    else:
+        if fs is not None:
+            fs.close()
+
+    return result
 
 # HANDLERS
 
@@ -71,7 +103,8 @@ def interrupt_handler():
 
 atexit.register(interrupt_handler)
 
-my_server = driver.TippyServer()
+config_dict = get_config_json("./config.json")
+my_server = driver.TippyServer(hostname = config_dict["serveaddr"], port = config_dict["port"])
 
 my_server.register_fallback_handler(handle_fallback)
 my_server.register_handler(["/index.html"], handle_index)
