@@ -6,4 +6,5 @@ __pycache__/
 
 # Ignore other logs:
 
+config.json
 *.txt
