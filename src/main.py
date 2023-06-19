@@ -67,7 +67,7 @@ def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, 
         return response.send_body(res.RES_ERR_BODY, "*/*", b'')
 
 def handle_favicon(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_resource("favicon.ico")
+    temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
     response.send_heading("200")
@@ -81,12 +81,12 @@ def handle_favicon(context: handlerctx.HandlerCtx, request: req.SimpleRequest, r
     response.send_header("Server", driver.SERVER_APP_NAME)
 
     if request.method == "HEAD":
-        response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
     else:
-        response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
 def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_resource("index.html")
+    temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
     response.send_heading("200")
@@ -105,7 +105,7 @@ def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, res
         return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
 def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_resource("info.html")
+    temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
     response.send_heading("200")
@@ -124,7 +124,7 @@ def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, resp
         return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
 def handle_css(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_resource("style.css")
+    temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
     response.send_heading("200")
@@ -156,5 +156,6 @@ my_server.register_fallback_handler(handle_fallback)
 my_server.register_handler(["/index.html"], handle_index)
 my_server.register_handler(["/info.html"], handle_info)
 my_server.register_handler(["/style.css"], handle_css)
+my_server.register_handler(["/favicon-32x32.png", "/favicon.ico"], handle_favicon)
 
 my_server.run()
