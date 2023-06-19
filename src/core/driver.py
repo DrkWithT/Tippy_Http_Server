@@ -54,10 +54,10 @@ class TippyServer:
         """
         self.serve_state = SERVER_ST_STOP
         self.socket.close()
-    
+
     def register_handler(self, paths: list[str], handler = None):
-        return self.handler_storage.add_handler(paths, handler)
-    
+        return self.handler_storage.add_handler(paths, handler) and self.resource_storage.add_item_paths(paths)
+
     def register_fallback_handler(self, handler = None):
         self.handler_storage.set_fallback_handler(handler)
 
@@ -65,7 +65,7 @@ class TippyServer:
         """
             @description Checks if a requested resource is up to date.
         """
-        resource_ref = self.resource_storage.get_item(request.path[1:])
+        resource_ref = self.resource_storage.get_item(request.path)
 
         # NOTE: Do not 304 for unknown resources, as this may confuse the user about the message semantics.
         if resource_ref is None:
@@ -131,7 +131,7 @@ class TippyServer:
         if not request_method_ok:
             return self.reply_error(request, "501")
 
-        if self.should_send_update(request):
+        if not self.should_send_update(request):
             return self.reply_cache_hit(request)
 
         request_last = request.before_close()
