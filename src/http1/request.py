@@ -44,8 +44,9 @@ class SimpleRequest:
             @note The GMT string returned here must be converted to a python time object before comparing!
         """
 
-        no_cache = self.get_header("cache-control") == "no-cache"
+        cache_ctrl_header = self.get_header("cache-control")
         cache_header = self.get_header("if-modified-since")
+        no_cache = cache_ctrl_header == "no-cache"
         request_mod_time = 0
 
         # NOTE default invalid or non-present cache date headers to 0 (really out of date!)

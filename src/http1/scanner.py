@@ -36,7 +36,8 @@ class HttpScanner:
             "content-length": None,
             "transfer-encoding": None,
             "if-modified-since": None,
-            "if-unmodified-since": None
+            "if-unmodified-since": None,
+            "cache-control": None
         }
 
         # Cache for bytes to put in request object:
@@ -50,6 +51,9 @@ class HttpScanner:
         self.hdr_cache["content-type"] = None
         self.hdr_cache["content-length"] = None
         self.hdr_cache["transfer-encoding"] = None
+        self.hdr_cache["if-modified-since"] = None
+        self.hdr_cache["if-unmodified-since"] = None
+        self.hdr_cache["cache-control"] = None
         self.temp_data = None
 
     def state_heading(self, line: str):
