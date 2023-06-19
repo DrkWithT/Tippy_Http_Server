@@ -44,15 +44,18 @@ class SimpleRequest:
             @note The GMT string returned here must be converted to a python time object before comparing!
         """
 
-        temp_header = self.get_header("if-modified-since")
+        no_cache = self.get_header("cache-control") == "no-cache"
+        cache_header = self.get_header("if-modified-since")
+        request_mod_time = 0
 
-        # NOTE default invalid or non-present cache date headers to now!
-        if not temp_header:
-            return time.time().__floor__()
+        # NOTE default invalid or non-present cache date headers to 0 (really out of date!)
+        if no_cache or not cache_header:
+            return request_mod_time
 
-        request_mod_time = time.strptime(temp_header, "%a, %d %b %Y %H:%M:%S GMT")
+        request_mod_header = time.strptime(cache_header, "%a, %d %b %Y %H:%M:%S GMT")
+        request_mod_time = calendar.timegm(request_mod_header)
 
-        return calendar.timegm(request_mod_time)
+        return request_mod_time
 
     def get_check_same_date(self):
         """
