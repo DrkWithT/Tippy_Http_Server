@@ -8,17 +8,17 @@ class HandlerCache:
         self.path_table = {}
         self.handlers = []
         self.fallback = None
-    
+
     def add_handler(self, paths: list[str], handler=None):
         if not handler or not paths:
             return False
-        
+
         if len(paths) < 1:
             return False
-        
+
         self.handlers.append(handler)
         new_index = len(self.handlers) - 1
-        
+
         for path in paths:
             self.path_table[path] = new_index
 
