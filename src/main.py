@@ -50,9 +50,15 @@ def get_config_json(file_path: str):
 # HANDLERS
 
 def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    last_res = request.before_close()
+
     response.send_heading("404")
     response.send_header("Date", context.get_gmt_str())
-    response.send_header("Connection", "Keep-Alive")
+
+    if last_res:
+        response.send_header("Connection", "Close")
+    else:
+        response.send_header("Connection", "Keep-Alive")
     response.send_header("Server", driver.SERVER_APP_NAME)
 
     if request.method == "HEAD":
@@ -60,12 +66,37 @@ def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, 
     else:
         return response.send_body(res.RES_ERR_BODY, "*/*", b'')
 
-def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
-    temp_resource = context.get_resource("index.html")
+def handle_favicon(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    temp_resource = context.get_resource("favicon.ico")
+    last_res = request.before_close()
 
     response.send_heading("200")
     response.send_header("Date", context.get_gmt_str())
-    response.send_header("Connection", "Keep-Alive")
+
+    if last_res:
+        response.send_header("Connection", "Close")
+    else:
+        response.send_header("Connection", "Keep-Alive")
+
+    response.send_header("Server", driver.SERVER_APP_NAME)
+
+    if request.method == "HEAD":
+        response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+    else:
+        response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+
+def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+    temp_resource = context.get_resource("index.html")
+    last_res = request.before_close()
+
+    response.send_heading("200")
+    response.send_header("Date", context.get_gmt_str())
+
+    if last_res:
+        response.send_header("Connection", "Close")
+    else:
+        response.send_header("Connection", "Keep-Alive")
+
     response.send_header("Server", driver.SERVER_APP_NAME)
 
     if request.method == "HEAD":
@@ -75,10 +106,16 @@ def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, res
 
 def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
     temp_resource = context.get_resource("info.html")
+    last_res = request.before_close()
 
     response.send_heading("200")
     response.send_header("Date", context.get_gmt_str())
-    response.send_header("Connection", "Keep-Alive")
+
+    if last_res:
+        response.send_header("Connection", "Close")
+    else:
+        response.send_header("Connection", "Keep-Alive")
+
     response.send_header("Server", driver.SERVER_APP_NAME)
 
     if request.method == "HEAD":
@@ -88,10 +125,15 @@ def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, resp
 
 def handle_css(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
     temp_resource = context.get_resource("style.css")
+    last_res = request.before_close()
 
     response.send_heading("200")
     response.send_header("Date", context.get_gmt_str())
-    response.send_header("Connection", "Keep-Alive")
+
+    if last_res:
+        response.send_header("Connection", "Close")
+    else:
+        response.send_header("Connection", "Keep-Alive")
     response.send_header("Server", driver.SERVER_APP_NAME)
 
     if request.method == "HEAD":

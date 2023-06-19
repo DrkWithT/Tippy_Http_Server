@@ -12,12 +12,14 @@ FS_SEEK_END = 2
 MIME_TYPE_TEXT = "text/plain"
 MIME_TYPE_HTML = "text/html"
 MIME_TYPE_CSS = "text/css"
+MIME_TYPE_PNG = "image/png"
 MIME_TYPE_ANY = "*/*"  # NOTE: assume MIME any type as raw binary!
 
 FILE_EXTS_TO_MIME = {
     "txt": MIME_TYPE_TEXT,
     "html": MIME_TYPE_HTML,
     "css": MIME_TYPE_CSS,
+    "png": MIME_TYPE_PNG,
     "foo": MIME_TYPE_ANY
 }
 
