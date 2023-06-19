@@ -1,20 +1,24 @@
 """
     @file main.py
+    @description Contains app handlers and startup code.
     @author Derek Tan
 """
 
-import atexit
-import json
-import http1.request as req
-import http1.sender as res
-import handlers.ctx.context as handlerctx
-import core.driver as driver
+import atexit  # For key interrupt handler
+import json    # For config file
+import http1.request as req  # Request object
+import http1.sender as res   # Response writer
+import handlers.ctx.context as handlerctx  # Special object to store more service functionality
+import core.driver as driver  # Server logic
 
 my_server = None
 
 # MISC. HELPERS
 
 def get_config_json(file_path: str):
+    """
+        @description Reads a config file for the server startup.
+    """
     result = {
         "serveaddr": "localhost",
         "port": 8080
@@ -101,7 +105,7 @@ def interrupt_handler():
 
 # RUN SERVER
 
-atexit.register(interrupt_handler)
+atexit.register(interrupt_handler)  # NOTE This handles CTRL+C to close the server gracefully.
 
 config_dict = get_config_json("./config.json")
 my_server = driver.TippyServer(hostname = config_dict["serveaddr"], port = config_dict["port"])

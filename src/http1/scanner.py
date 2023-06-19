@@ -114,7 +114,7 @@ class HttpScanner:
         temp_line = None
 
         while self.state != SCANNER_ST_END:
-            print(f'HttpScanner.state = {self.state}')  # DEBUG!
+            # print(f'HttpScanner.state = {self.state}')  # DEBUG!
 
             if self.state == SCANNER_ST_IDLE:
                 # Begin state!
@@ -152,7 +152,7 @@ class HttpScanner:
             else:
                 raise Exception("Invalid HTTP msg syntax!")
 
-        # TODO: Check req_schema for "HTTP/1.1"?
+        # TODO: Put req_schema into request object for checking http version support. Versions affect how request processing works: Host is not needed for 1.0, for example.
         req_method, req_path, req_schema = self.temps
 
         request = requests.SimpleRequest(req_method, req_path)
