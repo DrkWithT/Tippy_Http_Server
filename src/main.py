@@ -1,6 +1,7 @@
 """
-    @file main.py
-    @description Contains app handlers and startup code.
+    @file main.py\n
+    @description Contains app handlers and startup code.\n
+    @todo Add decorators for handler functions to modularize HEAD-GET responding code.\n
     @author Derek Tan
 """
 
@@ -145,7 +146,11 @@ def handle_css(context: HandlerCtx, request: SimpleRequest, response: SimpleSend
         return response.send_body(RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
 def interrupt_handler():
-    my_server.force_stop()
+    """
+        @summary This is an `atexit` handler. This closes and stops the listening producer before stopping all workers. No race conditions may occur since the closings in the `Tippy.stop_service` method are done in order.\n
+        @author Derek Tan
+    """
+    my_server.stop_service()
     print('Stopped Tippy.')
 
 # RUN SERVER
