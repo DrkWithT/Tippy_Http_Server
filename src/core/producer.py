@@ -18,14 +18,14 @@ class ConnProducer:
     
     def run(self, queue_ref: Queue, event_ref: Event):
         while self.is_listening:
-            # First, listen for a new connection request...
-            connection_info = self.server_socket.accept()
-
-            # Tell workers to wait until a work item is placed.
-            event_ref.clear()
-
-            # Try to put the connection as a new task tuple on the queue. Wait until the queue has space.
             try:
+                # First, listen for a new connection request...
+                connection_info = self.server_socket.accept()
+
+                # Tell workers to wait until a work item is placed.
+                event_ref.clear()
+
+                # Try to put the connection as a new task tuple on the queue. Wait until the queue has space.
                 queue_ref.put(item=connection_info, block=True)
             except Full as queue_error:
                 connection_info[0].close()
