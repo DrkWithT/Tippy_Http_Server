@@ -5,11 +5,13 @@
 """
 
 import atexit  # For key interrupt handler
-import json    # For config file
-import http1.request as req  # Request object
-import http1.sender as res   # Response writer
-import handlers.ctx.context as handlerctx  # Special object to store more service functionality
-import core.driver as driver  # Server logic
+import json
+from http1.request import SimpleRequest
+from http1.scanner import HttpScanner
+from http1.sender import SimpleSender, RES_ERR_BODY, RES_GET_BODY, RES_HEAD_BODY
+from handlers.ctx.context import HandlerCtx
+
+from core.instance import Tippy, TIPPY_VERSION_STRING
 
 my_server = None
 
@@ -49,7 +51,7 @@ def get_config_json(file_path: str):
 
 # HANDLERS
 
-def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+def handle_fallback(context: HandlerCtx, request: SimpleRequest, response: SimpleSender):
     last_res = request.before_close()
 
     response.send_heading("404")
@@ -59,14 +61,15 @@ def handle_fallback(context: handlerctx.HandlerCtx, request: req.SimpleRequest, 
         response.send_header("Connection", "Close")
     else:
         response.send_header("Connection", "Keep-Alive")
-    response.send_header("Server", driver.SERVER_APP_NAME)
+
+    response.send_header("Server", TIPPY_VERSION_STRING)
 
     if request.method == "HEAD":
-        return response.send_body(res.RES_HEAD_BODY, "*/*", b'')
+        return response.send_body(RES_HEAD_BODY, "*/*", b'')
     else:
-        return response.send_body(res.RES_ERR_BODY, "*/*", b'')
+        return response.send_body(RES_ERR_BODY, "*/*", b'')
 
-def handle_favicon(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+def handle_favicon(context: HandlerCtx, request: SimpleRequest, response: SimpleSender):
     temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
@@ -78,14 +81,14 @@ def handle_favicon(context: handlerctx.HandlerCtx, request: req.SimpleRequest, r
     else:
         response.send_header("Connection", "Keep-Alive")
 
-    response.send_header("Server", driver.SERVER_APP_NAME)
+    response.send_header("Server", TIPPY_VERSION_STRING)
 
     if request.method == "HEAD":
-        return response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
     else:
-        return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
-def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+def handle_index(context: HandlerCtx, request: SimpleRequest, response: SimpleSender):
     temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
@@ -97,14 +100,14 @@ def handle_index(context: handlerctx.HandlerCtx, request: req.SimpleRequest, res
     else:
         response.send_header("Connection", "Keep-Alive")
 
-    response.send_header("Server", driver.SERVER_APP_NAME)
+    response.send_header("Server", TIPPY_VERSION_STRING)
 
     if request.method == "HEAD":
-        return response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
     else:
-        return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
-def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+def handle_info(context: HandlerCtx, request: SimpleRequest, response: SimpleSender):
     temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
@@ -116,14 +119,14 @@ def handle_info(context: handlerctx.HandlerCtx, request: req.SimpleRequest, resp
     else:
         response.send_header("Connection", "Keep-Alive")
 
-    response.send_header("Server", driver.SERVER_APP_NAME)
+    response.send_header("Server", TIPPY_VERSION_STRING)
 
     if request.method == "HEAD":
-        return response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
     else:
-        return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
-def handle_css(context: handlerctx.HandlerCtx, request: req.SimpleRequest, response: res.SimpleSender):
+def handle_css(context: HandlerCtx, request: SimpleRequest, response: SimpleSender):
     temp_resource = context.get_resource(request.path)
     last_res = request.before_close()
 
@@ -134,28 +137,28 @@ def handle_css(context: handlerctx.HandlerCtx, request: req.SimpleRequest, respo
         response.send_header("Connection", "Close")
     else:
         response.send_header("Connection", "Keep-Alive")
-    response.send_header("Server", driver.SERVER_APP_NAME)
+    response.send_header("Server", TIPPY_VERSION_STRING)
 
     if request.method == "HEAD":
-        return response.send_body(res.RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_HEAD_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
     else:
-        return response.send_body(res.RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
+        return response.send_body(RES_GET_BODY, temp_resource.get_mime_type(), temp_resource.as_bytes())
 
 def interrupt_handler():
     my_server.force_stop()
-    print("Stopped server.")
+    print('Stopped Tippy.')
 
 # RUN SERVER
 
-atexit.register(interrupt_handler)  # NOTE This handles CTRL+C to close the server gracefully.
+atexit.register(interrupt_handler)  # NOTE This handles SIGINTs (CTRL+C) to gracefully close the server.
 
-config_dict = get_config_json("./config.json")
-my_server = driver.TippyServer(hostname = config_dict["serveaddr"], port = config_dict["port"])
+config_dict = get_config_json('./config.json')
+my_server = Tippy(host_name=config_dict['serveaddr'], host_port=config_dict['port'], backlog=config_dict['backlog'])
 
-my_server.register_fallback_handler(handle_fallback)
-my_server.register_handler(["/index.html"], handle_index)
-my_server.register_handler(["/info.html"], handle_info)
-my_server.register_handler(["/style.css"], handle_css)
-my_server.register_handler(["/favicon-32x32.png", "/favicon.ico"], handle_favicon)
+my_server.set_fallback_handler(handle_fallback)
+my_server.set_handler(["/index.html"], handle_index)
+my_server.set_handler(["/info.html"], handle_info)
+my_server.set_handler(["/style.css"], handle_css)
+my_server.set_handler(["/favicon-32x32.png", "/favicon.ico"], handle_favicon)
 
-my_server.run()
+my_server.run_service()
