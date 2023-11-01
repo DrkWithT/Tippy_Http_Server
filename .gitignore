@@ -1,9 +1,11 @@
 # Ignore special Python files:
-
 .venv/
 __pycache__/
 *.pyc
 
-# Ignore other logs:
-
+# Ignore other:
+.DS_Store
+config.json
 *.txt
+*.sh
+*.zsh

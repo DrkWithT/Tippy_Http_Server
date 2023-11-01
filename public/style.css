@@ -1,8 +1,61 @@
-/* style.css */
-
 body {
     display: block;
-    background-color: beige;
+    margin: 0;
+    padding: 0;
+    background-color: #323232;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 16pt;
+    font-size: 14pt;
+    color: whitesmoke;
+}
+
+header {
+    display: block;
+    background-color: #414141;
+    text-align: center;
+}
+
+h2 {
+    display: inline-block;
+    padding: 8px 0;
+}
+
+nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+a.nav-link {
+    display: block;
+    padding: 8px;
+    text-decoration: none;
+    color: royalblue;
+}
+
+a.nav-link:hover {
+    background-color: #646464;
+    color: lightskyblue;
+}
+
+section {
+    display: block;
+    margin: 0;
+    padding: 16px;
+}
+
+@media screen and (max-width: 480px) {
+    #cols {
+        display: flex;
+        flex-direction: column;
+        padding: 0 16px;
+    }
+}
+
+@media screen and (min-width: 481px) {
+    #cols {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 16px;
+        padding: 0 16px;
+    }
 }

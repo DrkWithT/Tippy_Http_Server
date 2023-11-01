@@ -36,7 +36,8 @@ class HttpScanner:
             "content-length": None,
             "transfer-encoding": None,
             "if-modified-since": None,
-            "if-unmodified-since": None
+            "if-unmodified-since": None,
+            "cache-control": None
         }
 
         # Cache for bytes to put in request object:
@@ -50,10 +51,12 @@ class HttpScanner:
         self.hdr_cache["content-type"] = None
         self.hdr_cache["content-length"] = None
         self.hdr_cache["transfer-encoding"] = None
+        self.hdr_cache["if-modified-since"] = None
+        self.hdr_cache["if-unmodified-since"] = None
+        self.hdr_cache["cache-control"] = None
         self.temp_data = None
 
     def state_heading(self, line: str):
-        print(f'heading line blank? {len(line) < 1}')  # DEBUG!
         tokens = line.split(consts.HTTP_SP)
 
         if len(tokens) != 3:
@@ -64,7 +67,6 @@ class HttpScanner:
         return SCANNER_ST_HEADER
 
     def state_header(self, line: str):
-        print(f'header line? {line}')  # DEBUG!
         if not line:
             return SCANNER_ST_BODY
 
@@ -87,7 +89,6 @@ class HttpScanner:
         if self.hdr_cache["transfer-encoding"] == "chunked":
             return SCANNER_ST_CHUNK_LEN
 
-        print("reading body!")
         self.temp_data = self.reader.read(content_len)
 
         return SCANNER_ST_END
@@ -117,14 +118,13 @@ class HttpScanner:
         temp_line = None
 
         while self.state != SCANNER_ST_END:
-            print(f'HttpScanner.state = {self.state}')  # DEBUG!
+            # print(f'HttpScanner.state = {self.state}')  # DEBUG!
 
             if self.state == SCANNER_ST_IDLE:
                 # Begin state!
                 self.state = SCANNER_ST_HEADING
             elif self.state == SCANNER_ST_HEADING:
                 # Process status line...
-                self.reader.flush()
                 temp_line = self.reader.readline().strip()
                 self.state = self.state_heading(temp_line)
             elif self.state == SCANNER_ST_HEADER:
@@ -155,7 +155,7 @@ class HttpScanner:
             else:
                 raise Exception("Invalid HTTP msg syntax!")
 
-        # TODO: Check req_schema for "HTTP/1.1"?
+        # TODO: Put req_schema into request object for checking http version support. Versions affect how request processing works: Host is not needed for 1.0, for example.
         req_method, req_path, req_schema = self.temps
 
         request = requests.SimpleRequest(req_method, req_path)
