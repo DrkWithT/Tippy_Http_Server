@@ -17,8 +17,7 @@ Lately I've been on an HTTP (1.1) server writing frenzy, and I decided to try Py
  - Graceful shutdown (WIP)
 
 ### Bugs:
- 1. On connection problems, the server may give malformed responses such as a "run-on" response message with multiple status lines and header groups. As of now, I am at a loss on how to fix this.
-   - This usually happens with `curl` using HTTP 1.1!
+ 1. On multiple tabs from Firefox, only one worker is providing service although another is also awake. This could be dependent on varying browser behavior on refresh. Edge / Chrome usually restarts a new connection on a random port, but Firefox seems more conservative with starting new connections?
 
 ### Old Sample Run:
 <img width="400" src="./imgs/PythonHttpServer_Test2.png">
@@ -30,7 +29,7 @@ Lately I've been on an HTTP (1.1) server writing frenzy, and I decided to try Py
  - `curl --verbose -X GET http://localhost:8080/index.html -H "Connection: Close" -H "If-Modified-Since: Mon, 12 Jun 2023 23:59:59 GMT"` (GET page with update date check... modify `public/index.html` to test this.)
 
 ### Things To Do??
- 1. Refactor server code to be cleaner: modular, well-named, etc.
+ 1. Refactor server code to be cleaner: modular, well-named, etc. (WIP)
  2. Add URL parsing for relative and absolute URLs.
  3. Add threading. (WIP)
  4. Support 100 Continue. (To do...)

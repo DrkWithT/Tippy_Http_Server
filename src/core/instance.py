@@ -1,12 +1,13 @@
 """
-    instance.py\n
-    Rewritten driver class for my HTTP/1.1 server, Tippy.\n
-    Derek Tan
+    @file instance.py\n
+    @summary Rewritten driver class for my HTTP/1.1 server, Tippy. This implementation supports thread pooling for concurrent connections.\n
+    @todo Fix constructor of `Tippy` class to accept a config dict!
+    @author Derek Tan
 """
 
 from time import sleep
 from queue import Queue
-from threading import Event, Thread, current_thread
+from threading import Event, Thread
 
 from core.producer import ConnProducer, producer_runnable
 from core.worker import ConnWorker, worker_runnable
