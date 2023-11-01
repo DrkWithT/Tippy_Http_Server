@@ -125,7 +125,6 @@ class HttpScanner:
                 self.state = SCANNER_ST_HEADING
             elif self.state == SCANNER_ST_HEADING:
                 # Process status line...
-                self.reader.flush()
                 temp_line = self.reader.readline().strip()
                 self.state = self.state_heading(temp_line)
             elif self.state == SCANNER_ST_HEADER:

@@ -22,11 +22,11 @@ class ConnProducer:
         print(f'{__name__}: Started listening at {self.host_info[0]}:{self.host_info[1]}')
 
         while self.is_listening:
-            try:
-                # Tell workers to wait until a work item is placed.
-                event_ref.clear()
+            # Tell workers to wait until an item is placed.
+            event_ref.clear()
 
-                # First, listen for a new connection request...
+            try:
+                # First, listen for a new connection request.
                 connection_info = self.server_socket.accept()
 
                 print(f'{__name__}: Accepted connection from {connection_info[1]}')
@@ -38,7 +38,9 @@ class ConnProducer:
                 print(f'{__name__}: Failed to queue client connection with error: {queue_error}')
                 continue
             
+            # Tell workers to wake up.
             event_ref.set()
+            queue_ref.join()
     
     def soft_stop(self):
         self.is_listening = False
