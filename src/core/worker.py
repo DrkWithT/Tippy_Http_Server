@@ -4,8 +4,10 @@
     @author Derek Tan
 """
 
+from calendar import timegm
+from time import gmtime
 from threading import Event
-from socket import socket, _RetAddress
+from socket import socket
 from queue import Queue
 
 from http1.request import SimpleRequest
@@ -45,22 +47,28 @@ class ConnWorker:
         
         # Compute if the resource hits the cache by time diffs.
         resource_modify_time = resource_ref.get_modify_date()
-        resource_cache_time = resource_ref.get_check_modify_date()
+        resource_need_time = timegm(gmtime())
 
-        return resource_modify_time > resource_cache_time
+        return resource_modify_time < resource_need_time
 
-    def do_consume(self, queue_ref: Queue[tuple[socket, _RetAddress]], event_ref: Event):
+    def do_consume(self, queue_ref: Queue[tuple], event_ref: Event):
+        print(f'{__name__}: Worker {self.id} awaiting work.')
+
         # Wait for the producer to signal that work is available...
         event_ref.wait()
 
-        # Get the work item.
-        client_sock, client_addr = queue_ref.get(block=True)
+        print(f'{__name__}: Worker {self.id} woke up.')
 
-        print(f'{__name__}: Consumed client connection with {client_addr}')
+        # Get the work item.
+        client_sock, client_addr = queue_ref.get()
 
         self.current_socket = client_sock
         self.scanner = HttpScanner(self.current_socket.makefile('r'))
         self.sender = SimpleSender(self.current_socket.makefile('wb'))
+
+        print(f'{__name__}@worker {self.id}: Consumed client connection with {client_addr}')
+
+        queue_ref.task_done()
 
         return WORKER_ST_RECV
 
@@ -132,14 +140,20 @@ class ConnWorker:
 
     def cleanup(self):
         self.state = WORKER_ST_END
-        self.current_socket.close()
+
+        if self.current_socket is not None:
+            self.current_socket.close()
+
         self.scanner = None
         self.sender = None
         self.handlers = None
         self.context = None
+        print(f'{__name__}: Stopped worker {self.id}')
 
-    def do_next(self, queue_ref: Queue[tuple[socket, _RetAddress]], event_ref: Event):
-        if self.state == WORKER_ST_CONSUME:
+    def do_next(self, queue_ref: Queue[tuple], event_ref: Event):
+        if self.state == WORKER_ST_IDLE:
+            return WORKER_ST_CONSUME
+        elif self.state == WORKER_ST_CONSUME:
             return self.do_consume(queue_ref, event_ref)
         elif self.state == WORKER_ST_RECV:
             return self.do_recieve()
@@ -153,9 +167,9 @@ class ConnWorker:
             return self.do_reset()
         else:
             # Final case: treat WORKER_ST_END or unknown states as stop codes.
-            return self.state
+            return WORKER_ST_END
 
-    def run(self, queue_ref: Queue[tuple[socket, _RetAddress]], event_ref: Event):
+    def run(self, queue_ref: Queue[tuple], event_ref: Event):
         while self.state != WORKER_ST_END:
             try:
                 self.state = self.do_next(queue_ref, event_ref)
@@ -163,7 +177,5 @@ class ConnWorker:
                 print(f'{__name__}: Worker error: {serve_error}')
                 self.state = WORKER_ST_ERROR
 
-def worker_runnable(worker_ref: ConnWorker, queue_ref: Queue, event_ref: Event):
+def worker_runnable(worker_ref: ConnWorker, queue_ref: Queue[tuple], event_ref: Event):
     worker_ref.run(queue_ref, event_ref)
-    worker_ref.cleanup()
-    print(f'Stopped worker: {worker_ref.id}')
