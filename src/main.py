@@ -151,7 +151,7 @@ def interrupt_handler():
         @author Derek Tan
     """
     my_server.stop_service()
-    print('Stopped Tippy.')
+    print('Stopped Tippy web server.')
 
 # RUN SERVER
 

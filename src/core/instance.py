@@ -4,11 +4,12 @@
     Derek Tan
 """
 
+from time import sleep
 from queue import Queue
-from threading import Event, Thread
+from threading import Event, Thread, current_thread
 
-from producer import ConnProducer, producer_runnable
-from worker import ConnWorker, worker_runnable
+from core.producer import ConnProducer, producer_runnable
+from core.worker import ConnWorker, worker_runnable
 
 from utils.rescache import ResourceCache
 from handlers.handcache import HandlerCache
@@ -41,8 +42,7 @@ class Tippy:
         self.producer_thread = Thread(
             target=producer_runnable,
             name=f'top_{TIPPY_WORKER_NAME}',
-            args=(self.producer, self.shared_queue, self.shared_eventer),
-            daemon=True
+            args=(self.producer, self.shared_queue, self.shared_eventer)
         )
         self.worker_threads: list[Thread] = []
 
@@ -54,8 +54,7 @@ class Tippy:
             self.worker_threads.append(
                 Thread(
                     target=worker_runnable, name=f'{TIPPY_WORKER_NAME}{thread_n}',
-                    args=(self.workers[thread_n], self.shared_queue, self.shared_eventer),
-                    daemon=True
+                    args=(self.workers[thread_n], self.shared_queue, self.shared_eventer)
                 )
             )
     
@@ -70,9 +69,11 @@ class Tippy:
         # 1. Launch producer before workers.
         self.producer_thread.start()
 
+        sleep(0.010)
+
         # 2. Enjoy watching it serve your browser. :)
         for worker_thread in self.worker_threads:
-            worker_thread.start() 
+            worker_thread.start()
     
     def stop_service(self):
         self.producer.soft_stop()
